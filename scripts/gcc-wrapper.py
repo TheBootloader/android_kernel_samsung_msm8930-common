@@ -69,6 +69,7 @@ allowed_warnings = set([
    "lowmemorykiller.c:223",
    "pm8921-bms.c:956",
    "pm8921-bms.c:949",
+   "hci_conn.c:407",
  ])
 
 # Capture the name of the object file, can find it.
