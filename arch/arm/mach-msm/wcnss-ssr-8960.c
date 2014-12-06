@@ -28,6 +28,8 @@
 #include "smd_private.h"
 #include "ramdump.h"
 
+#include "msm_watchdog.h"
+
 #define MODULE_NAME			"wcnss_8960"
 #define MAX_BUF_SIZE			0x51
 
@@ -102,7 +104,6 @@ static irqreturn_t riva_wdog_bite_irq_hdlr(int irq, void *dev_id)
 		panic(MODULE_NAME ": Watchdog bite received from Riva");
 
 	ss_restart_inprogress = true;
-	wcnss_riva_log_debug_regs();
 	subsystem_restart_dev(riva_8960_dev);
 
 	return IRQ_HANDLED;
@@ -185,6 +186,7 @@ static int riva_ramdump(int enable, const struct subsys_desc *subsys)
 /* Riva crash handler */
 static void riva_crash_shutdown(const struct subsys_desc *subsys)
 {
+	pet_watchdog();
 	pr_err("%s: crash shutdown : %d\n", MODULE_NAME, riva_crash);
 	if (riva_crash != true) {
 		smsm_riva_reset();
@@ -192,7 +194,6 @@ static void riva_crash_shutdown(const struct subsys_desc *subsys)
 		 * fatal routine */
 		mdelay(3000);
 	}
-
 }
 
 static struct subsys_desc riva_8960 = {
@@ -240,7 +241,7 @@ static int __init riva_ssr_module_init(void)
 		goto out;
 	}
 	ret = request_irq(RIVA_APSS_WDOG_BITE_RESET_RDY_IRQ,
-			riva_wdog_bite_irq_hdlr, IRQF_TRIGGER_RISING,
+			riva_wdog_bite_irq_hdlr, IRQF_TRIGGER_HIGH,
 				"riva_wdog", NULL);
 
 	if (ret < 0) {
