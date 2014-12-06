@@ -28,8 +28,6 @@
 #include "smd_private.h"
 #include "ramdump.h"
 
-#include "msm_watchdog.h"
-
 #define MODULE_NAME			"wcnss_8960"
 #define MAX_BUF_SIZE			0x51
 
@@ -186,7 +184,6 @@ static int riva_ramdump(int enable, const struct subsys_desc *subsys)
 /* Riva crash handler */
 static void riva_crash_shutdown(const struct subsys_desc *subsys)
 {
-	pet_watchdog();
 	pr_err("%s: crash shutdown : %d\n", MODULE_NAME, riva_crash);
 	if (riva_crash != true) {
 		smsm_riva_reset();
@@ -194,6 +191,7 @@ static void riva_crash_shutdown(const struct subsys_desc *subsys)
 		 * fatal routine */
 		mdelay(3000);
 	}
+
 }
 
 static struct subsys_desc riva_8960 = {
@@ -241,7 +239,7 @@ static int __init riva_ssr_module_init(void)
 		goto out;
 	}
 	ret = request_irq(RIVA_APSS_WDOG_BITE_RESET_RDY_IRQ,
-			riva_wdog_bite_irq_hdlr, IRQF_TRIGGER_HIGH,
+			riva_wdog_bite_irq_hdlr, IRQF_TRIGGER_RISING,
 				"riva_wdog", NULL);
 
 	if (ret < 0) {
@@ -253,18 +251,22 @@ static int __init riva_ssr_module_init(void)
 	if (ret < 0) {
 		pr_err("%s: Unable to register with ssr. (%d)\n",
 				MODULE_NAME, ret);
-		goto out;
+		goto restart_init_fail;
 	}
 	riva_ramdump_dev = create_ramdump_device("riva");
 	if (!riva_ramdump_dev) {
 		pr_err("%s: Unable to create ramdump device.\n",
 				MODULE_NAME);
 		ret = -ENOMEM;
-		goto out;
+		goto ramdump_device_fail;
 	}
 	INIT_DELAYED_WORK(&cancel_vote_work, riva_post_bootup);
 
 	pr_info("%s: module initialized\n", MODULE_NAME);
+ramdump_device_fail:
+    subsys_unregister(riva_8960_dev);
+restart_init_fail:
+    free_irq(RIVA_APSS_WDOG_BITE_RESET_RDY_IRQ, NULL);
 out:
 	return ret;
 }

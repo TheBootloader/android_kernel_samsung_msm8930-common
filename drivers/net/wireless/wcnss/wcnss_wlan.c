@@ -41,6 +41,13 @@
 #ifdef CONFIG_WCNSS_MEM_PRE_ALLOC
 #include "wcnss_prealloc.h"
 #endif
+#if defined(CONFIG_MACH_MELIUS_SKT) || defined(CONFIG_MACH_MELIUS_KTT) || \
+	defined(CONFIG_MACH_MELIUS_LGT)
+#if !defined(CONFIG_RADIO_IRIS) && defined(CONFIG_IR_REMOCON_FPGA)
+/* workaround about conflict with qualcomm FM radio gpio */
+#include <mach/msm8930-gpio.h>
+#endif
+#endif
 
 #define DEVICE "wcnss_wlan"
 #define CTRL_DEVICE "wcnss_ctrl"
@@ -85,7 +92,6 @@ static DEFINE_SPINLOCK(reg_spinlock);
 #define WCNSS_USR_CTRL_MSG_START  0x00000000
 #define WCNSS_USR_SERIAL_NUM      (WCNSS_USR_CTRL_MSG_START + 1)
 #define WCNSS_USR_HAS_CAL_DATA    (WCNSS_USR_CTRL_MSG_START + 2)
-#define WCNSS_USR_WLAN_MAC_ADDR   (WCNSS_USR_CTRL_MSG_START + 3)
 
 #define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
 
@@ -509,6 +515,17 @@ static void wcnss_post_bootup(struct work_struct *work)
 	/* Since Riva is up, cancel any APPS vote for Iris & Riva VREGs  */
 	wcnss_wlan_power(&penv->pdev->dev, &penv->wlan_config,
 		WCNSS_WLAN_SWITCH_OFF);
+
+#if defined(CONFIG_MACH_MELIUS_SKT) || defined(CONFIG_MACH_MELIUS_KTT) || \
+	defined(CONFIG_MACH_MELIUS_LGT)
+#if !defined(CONFIG_RADIO_IRIS) && defined(CONFIG_IR_REMOCON_FPGA)
+	/* workaround about conflict with qualcomm FM radio gpio */
+	gpio_tlmm_config(GPIO_CFG(GPIO_IRDA_SDA, 0,
+		GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA), 1);
+	gpio_tlmm_config(GPIO_CFG(GPIO_IRDA_SCL, 0,
+		GPIO_CFG_INPUT,	GPIO_CFG_NO_PULL, GPIO_CFG_8MA), 1);
+#endif
+#endif
 }
 
 static int
@@ -1437,16 +1454,6 @@ void process_usr_ctrl_cmd(u8 *buf, size_t len)
 		has_calibrated_data = buf[2];
 		break;
 
-	case WCNSS_USR_WLAN_MAC_ADDR:
-		memcpy(&penv->wlan_nv_macAddr,  &buf[2],
-				sizeof(penv->wlan_nv_macAddr));
-
-		pr_debug("%s: MAC Addr:" MAC_ADDRESS_STR "\n", __func__,
-			penv->wlan_nv_macAddr[0], penv->wlan_nv_macAddr[1],
-			penv->wlan_nv_macAddr[2], penv->wlan_nv_macAddr[3],
-			penv->wlan_nv_macAddr[4], penv->wlan_nv_macAddr[5]);
-		break;
-
 	default:
 		pr_err("%s: Invalid command %d\n", __func__, cmd);
 		break;
@@ -1847,6 +1854,13 @@ static void __exit wcnss_wlan_exit(void)
 	wcnss_prealloc_deinit();
 #endif
 }
+
+static unsigned char prealloc_mac_mem[32*1024];
+void* wcnss_get_prealloc_mac_context(void)
+{
+	return prealloc_mac_mem;
+}
+EXPORT_SYMBOL(wcnss_get_prealloc_mac_context);
 
 module_init(wcnss_wlan_init);
 module_exit(wcnss_wlan_exit);
