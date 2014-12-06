@@ -930,7 +930,7 @@ static int reset_cc(struct pm8921_bms_chip *chip)
 #define NUM_V_I_SAMPLES	   5
 static int estimate_ocv(struct pm8921_bms_chip *chip)
 {
-	int ibat_ua, vbat_uv, ocv_est_uv, vbat_min, ibat_min;
+	int ibat_ua = 0, vbat_uv = 0, ocv_est_uv = 0, vbat_min = 0, ibat_min = 0;
 	int rc, i;
 	int rbatt_mohm = chip->default_rbatt_mohm + chip->rconn_mohm
 				+ chip->rbatt_capacitive_mohm;

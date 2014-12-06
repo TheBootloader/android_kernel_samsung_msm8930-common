@@ -310,7 +310,7 @@ static int mxt_read_config_crc(struct mxt_data *data, u32 *crc)
 	struct device *dev = &data->client->dev;
 	struct mxt_message message;
 	struct mxt_object *object;
-	int error;
+	int error = 0;
 
 	object = mxt_get_object(data, MXT_GEN_COMMANDPROCESSOR_T6);
 	if (!object)
@@ -448,7 +448,7 @@ static int mxt_init_write_config(struct mxt_data *data,
 {
 	struct mxt_object *object;
 	u8 *temp;
-	int ret;
+	int ret = 0;
 
 	object = mxt_get_object(data, type);
 	if (!object)
@@ -487,7 +487,7 @@ static int mxt_write_config_from_pdata(struct mxt_data *data)
 	struct device *dev = &data->client->dev;
 	u8 **tsp_config = (u8 **)data->pdata->config;
 	u8 i;
-	int ret;
+	int ret = 0;
 
 	if (!tsp_config) {
 		dev_info(dev, "No cfg data in pdata\n");
@@ -694,7 +694,7 @@ static int mxt_write_config(struct mxt_fw_info *fw_info)
 	struct mxt_cfg_data *cfg_data;
 	u8 i, val = 0;
 	u16 reg, index;
-	int ret;
+	int ret = 0;
 	
 	u32 cfg_length = data->cfg_len = fw_info->cfg_len / 2 ;
 
@@ -816,7 +816,7 @@ static int mxt_write_config(struct mxt_fw_info *fw_info)
 	u32 current_crc;
 	u8 i, val = 0;
 	u16 reg, index;
-	int ret;
+	int ret = 0;
 
 	if (!fw_info->cfg_raw_data) {
 		dev_info(dev, "No cfg data in file\n");
@@ -3775,7 +3775,7 @@ static int  mxt_rest_initialize(struct mxt_fw_info *fw_info)
 {
 	struct mxt_data *data = fw_info->data;
 	struct device *dev = &data->client->dev;
-	int ret;
+	int ret = 0;
 
 	/* Restore memory and stop event handing */
 	ret = mxt_command_backup(data, MXT_DISALEEVT_VALUE);

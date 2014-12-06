@@ -65,8 +65,6 @@ allowed_warnings = set([
    "xc4000.c:1063",	
    "adreno.c:818",
    "non-atomic.h:105",
-   "mxts_msm8930.c:3789",
-   "lowmemorykiller.c:223",
  ])
 
 # Capture the name of the object file, can find it.
