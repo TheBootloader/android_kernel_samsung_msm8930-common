@@ -730,10 +730,6 @@ static int ecm_qc_function_bind_config(struct android_usb_function *f,
 		return -EINVAL;
 	}
 
-	pr_info("%s MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", __func__,
-		ecm->ethaddr[0], ecm->ethaddr[1], ecm->ethaddr[2],
-		ecm->ethaddr[3], ecm->ethaddr[4], ecm->ethaddr[5]);
-
 	ret = gether_qc_setup_name(c->cdev->gadget, ecm->ethaddr, "ecm");
 	if (ret) {
 		pr_err("%s: gether_setup failed\n", __func__);

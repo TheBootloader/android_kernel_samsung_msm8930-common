@@ -222,7 +222,12 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	)
 	unsigned long nr_to_scan = sc->nr_to_scan;
 #endif
+#ifndef CONFIG_CMA
 	int other_free = global_page_state(NR_FREE_PAGES);
+#else
+	int other_free = global_page_state(NR_FREE_PAGES) -
+				global_page_state(NR_FREE_CMA_PAGES);
+#endif
 	int other_file = global_page_state(NR_FILE_PAGES) - global_page_state(NR_SHMEM);
 #ifdef CONFIG_ZRAM_FOR_ANDROID
 	other_file -= total_swapcache_pages;
