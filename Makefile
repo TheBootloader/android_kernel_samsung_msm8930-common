@@ -192,8 +192,9 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?=arm
-CROSS_COMPILE	?=/opt/toolchains/arm-eabi-4.6/bin/arm-eabi-
+ARCH		?= arm
+SUBARCH		?= arm
+CROSS_COMPILE	?= defined-externally
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -359,7 +360,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
-LDFLAGS_MODULE  =
+LDFLAGS_MODULE  = --strip-debug
 CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
@@ -378,12 +379,14 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks
+		   -fno-delete-null-pointer-checks \
+		   -mtune=cortex-a15 -mfpu=neon-vfpv4 \
+		   -ftree-vectorize
 KBUILD_AFLAGS_KERNEL :=
-KBUILD_CFLAGS_KERNEL := -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon-vfpv4
+KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 KBUILD_AFLAGS_MODULE  := -DMODULE
-KBUILD_CFLAGS_MODULE  := -DMODULE -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon-vfpv4
+KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
@@ -648,26 +651,6 @@ KBUILD_ARFLAGS := $(call ar-option,D)
 # check for 'asm goto'
 ifeq ($(shell $(CONFIG_SHELL) $(srctree)/scripts/gcc-goto.sh $(CC)), y)
 	KBUILD_CFLAGS += -DCC_HAVE_ASM_GOTO
-endif
-
-#Disable the whole of the following block to disable L1 TIMA
-#ifeq ($(TIMA_ENABLED),1)
-#      KBUILD_CFLAGS += 	-DTIMA_ENABLED \
-			-DTIMA_PGD_FREE_MANAGE -DTIMA_COPY_PMD_MANAGE \
-			-DTIMA_PMD_CLEAR_MANAGE -DTIMA_KERNEL_L1_MANAGE \
-			-DTIMA_L2_MANAGE -DTIMA_L2_GROUP \
-			-DTIMA_DEBUG_INFRA -DTIMA_INIT_SEC_MON
-#       KBUILD_AFLAGS += -DTIMA_ENABLED \
-			-DTIMA_PGD_FREE_MANAGE -DTIMA_COPY_PMD_MANAGE \
-			-DTIMA_PMD_CLEAR_MANAGE -DTIMA_KERNEL_L1_MANAGE \
-			-DTIMA_L2_MANAGE -DTIMA_L2_GROUP \
-			-DTIMA_DEBUG_INFRA -DTIMA_INIT_SEC_MON
-#endif
-
-#Disable the whole of the following block to disable LKM AUTH
-ifeq ($(TIMA_ENABLED),1)
-       KBUILD_CFLAGS += -DTIMA_LKM_AUTH_ENABLED -DTIMA_TEST_INFRA #-DTIMA_LKM_SET_PAGE_ATTRIB
-       KBUILD_AFLAGS += -DTIMA_LKM_AUTH_ENABLED #-DTIMA_LKM_SET_PAGE_ATTRIB
 endif
 
 # Add user supplied CPPFLAGS, AFLAGS and CFLAGS as the last assignments
